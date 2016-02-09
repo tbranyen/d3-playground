@@ -1,0 +1,30 @@
+body {
+  font: 10px sans-serif;
+  padding: 50px;
+  margin: 0;
+}
+
+.chart {
+  border: 1px dashed #eee
+}
+
+.chart rect {
+  fill: #46B3FF;
+}
+
+.chart text {
+  fill: #121212;
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+
+.chart .axis text {
+  font: 8px sans-serif;
+}
+
+.chart .axis path,
+.chart .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
