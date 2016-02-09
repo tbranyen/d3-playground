@@ -1,5 +1,5 @@
-
 import style from './style.css'
+import { outerHTML as diffOuterHTML } from 'diffhtml'
 
 const margin = {
   top: 10,
@@ -11,11 +11,7 @@ const margin = {
 const width = 655 - margin.left - margin.right
 const height = 111 - margin.top - margin.bottom
 
-const chart = d3.select('.chart')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-  .append('g')
-    .attr('transform', `translate(${margin.left}, ${margin.top})`)
+const chart = document.querySelector('.chart')
 
 const x = d3.time.scale()
   .rangeRound([0, width])
@@ -42,32 +38,31 @@ const yAxis = d3.svg.axis()
 
 d3.json('data.json', function(err, data) {
   if (err) throw err
-  data = reduce(data)
 
   x.domain(d3.extent(data, d => new Date(d.key)))
   y.domain([0, d3.max(data, d => d.durations_total_avg.value)])
 
   const barWidth = width / data.length
 
-  const bar = chart.selectAll('g')
-      .data(data)
-    .enter().append('g')
-      .attr('transform', (d, i) => `translate(${i * barWidth}, 0)`)
+  diffOuterHTML(chart, `
+    <svg class="chart" width="${width + margin.left + margin.left}" height="${height + margin.top + margin.bottom}">
+      <g transform="translate(${[margin.left, margin.top]})">
+        ${data.map((d, i) => `
+          <g transform="translate(${[i * barWidth, 0]})">
+            <rect
+              y="${y(d.durations_total_avg.value)}"
+              height="${height - y(d.durations_total_avg.value)}"
+              width="${barWidth - 1}"
+            ></rect>
+          </g>
+        `).join('\n')}
 
-  bar.append('rect')
-    .attr('y', d => y(d.durations_total_avg.value))
-    .attr('height', d => height - y(d.durations_total_avg.value))
-    .attr('width', barWidth - 1)
+        <g class="x axis" transform="translate(${[0, height]})"></g>
+        <g class="y axis" transform="translate(${[0, 0]})"></g>
+      </g>
+    </svg>
+  `)
 
-  chart.append('g')
-    .attr('class', 'x axis')
-    .attr('transform', `translate(0, ${height})`)
-    .call(xAxis)
-
-  chart.append('g')
-    .attr('class', 'y axis')
-    .attr('transform', `translate(0, 0)`)
-    .call(yAxis)
+  xAxis(d3.select(chart.querySelector('.x.axis')));
+  yAxis(d3.select(chart.querySelector('.y.axis')));
 })
-
-const reduce = data => data.aggregations.durations.histograms.buckets
